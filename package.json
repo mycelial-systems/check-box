@@ -1,6 +1,6 @@
 {
   "name": "@substrate-system/check-box",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Checkboxes with style",
   "type": "module",
   "exports": {
