@@ -37,13 +37,87 @@ npm i -S @substrate-system/check-box
 
 ## API
 
-This exposes ESM and common JS via [package.json `exports` field](https://nodejs.org/api/packages.html#exports).
+### Label
+
+The inner text content is used for the label's value.
+
+```html
+<check-box>My label text</check-box>
+```
+
+### Attributes
+
+Takes standard input attributes.
+
+- **`checked`** - Boolean attribute. When present, the checkbox is checked.
+  ```html
+  <check-box checked>Checked by default</check-box>
+  ```
+
+- **`disabled`** - Boolean attribute. When present, the checkbox is disabled and cannot be interacted with.
+  ```html
+  <check-box disabled>Cannot be clicked</check-box>
+  ```
+
+- **`name`** - String attribute. Sets the name of the checkbox, useful for form submissions.
+  ```html
+  <check-box name="newsletter">Subscribe to newsletter</check-box>
+  ```
+
+
+### JavaScript API
+
+Getters and setters for programmatic access:
+
+```js
+const checkbox = document.querySelector('check-box')
+
+// Get/set checked state
+console.log(checkbox.checked)  // false
+checkbox.checked = true
+
+// Get/set disabled state
+console.log(checkbox.disabled)  // false
+checkbox.disabled = true
+
+// Get/set name
+console.log(checkbox.name)  // ""
+checkbox.name = "myCheckbox"
+```
+
+
+### Events
+
+Standard HTML checkbox events are bubbled from the inner
+`<input type="checkbox">` element.
+
+* `change`
+* `input`
+* `click`
+
+```js
+const checkbox = document.querySelector('check-box')
+checkbox.addEventListener('change', (event) => {
+  console.log('Checked:', event.target.checked)
+})
+```
+
+
+
+---
+
+## Modules
+
+This exposes ESM and common JS via
+[package.json `exports` field](https://nodejs.org/api/packages.html#exports).
+
 
 ### ESM
 
 ```js
 import { CheckBox } from '@substrate-system/check-box'
 ```
+
 
 ## CSS
 
@@ -64,6 +138,7 @@ Or minified:
 import '@substrate-system/check-box/min/css'
 ```
 
+
 ### Customize CSS via some variables
 
 ```css
@@ -72,6 +147,7 @@ check-box {
   --primary-highlight: #00bbcb;
 }
 ```
+
 
 ## Use
 
@@ -91,8 +167,8 @@ import '@substrate-system/check-box'
 ```
 
 ### pre-built
-This package exposes minified JS and CSS files too. Copy them to a location that is
-accessible to your web server, then link to them in HTML.
+This package exposes minified JS and CSS files too. Copy them to a location
+that is accessible to your web server, then link to them in HTML.
 
 #### copy
 ```sh
