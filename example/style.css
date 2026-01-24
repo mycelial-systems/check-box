@@ -6,11 +6,17 @@ body {
     padding: 2rem 1rem;
 }
 
-check-box.disabled {
-    opacity: 0.4;
+check-box {
+    &.disabled {
+        opacity: 0.4;
+
+        & label {
+            cursor: not-allowed;
+        }
+    }
 
     & label {
-        cursor: not-allowed;
+        font-size: 2rem;
     }
 }
 
