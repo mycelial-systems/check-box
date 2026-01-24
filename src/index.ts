@@ -1,6 +1,4 @@
-import Debug from '@substrate-system/debug'
 import { define } from '@substrate-system/web-component/util'
-const debug = Debug('checkbox')
 
 // for document.querySelector
 declare global {
@@ -59,11 +57,6 @@ export class CheckBox extends HTMLElement {
     async connectedCallback () {
         this.render()
         this._input = this.querySelector('input')
-        this._input?.addEventListener('change', this.handleChange)
-    }
-
-    disconnectedCallback () {
-        this._input?.removeEventListener('change', this.handleChange)
     }
 
     attributeChangedCallback (name:string, oldValue:string, newValue:string) {
@@ -85,24 +78,6 @@ export class CheckBox extends HTMLElement {
                 this._input.name = newValue ?? ''
                 break
         }
-    }
-
-    private handleChange = (ev:Event) => {
-        const target = ev.target as HTMLInputElement
-        debug('checkbox changed', target.checked)
-
-        // Update the attribute to reflect the new state
-        if (target.checked) {
-            this.setAttribute('checked', '')
-        } else {
-            this.removeAttribute('checked')
-        }
-
-        // Dispatch a custom event
-        this.dispatchEvent(new CustomEvent('change', {
-            bubbles: true,
-            detail: { checked: target.checked }
-        }))
     }
 
     render () {
