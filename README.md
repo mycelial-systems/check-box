@@ -17,6 +17,11 @@ A web component checkbox.
 
 - [Install](#install)
 - [API](#api)
+  * [Label](#label)
+  * [Attributes](#attributes)
+  * [JavaScript API](#javascript-api)
+  * [Events](#events)
+- [Modules](#modules)
   * [ESM](#esm)
 - [CSS](#css)
   * [Import CSS](#import-css)
