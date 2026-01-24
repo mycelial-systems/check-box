@@ -4,100 +4,100 @@
 }
 
 /**
- * Don't show until JavaScript is instantiated
+ * Don't show until JavaScript is ready
  */
 check-box:not(:defined) {
-    display: none;
+    visibility: hidden;
 }
 
 check-box {
     display: block;
-}
 
-label.checkbox-label {
-    display: grid;
-    gap: 1em;
-    align-items: center;
-    font-size: 2rem;
-    grid-template-columns: 1rem auto;
-    cursor: pointer;
-    width: fit-content;
+    & label.checkbox-label {
+        display: grid;
+        gap: 1em;
+        align-items: center;
+        font-size: 2rem;
+        grid-template-columns: 1rem auto;
+        cursor: pointer;
+        width: fit-content;
 
-    & input {
-        border-radius: 0;
-    }
+        & input {
+            border-radius: 0;
+        }
 
-    & span {
-        font-size: 1.2rem;
-        margin-bottom: 0.2em;
-    }
+        & span {
+            font-size: 1.2rem;
+            margin-bottom: 0.2em;
+        }
 
-    &:focus, &:focus-within {
-        & input[type="checkbox"] {
-            outline-color: var(--primary-accent);
-            border-color: var(--primary-accent);
-            outline-offset: 2px;
+        &:focus, &:focus-within {
+            & input[type="checkbox"] {
+                outline-color: var(--primary-accent);
+                border-color: var(--primary-accent);
+                outline-offset: 2px;
+            }
         }
     }
-}
 
-input[type="checkbox"] {
-    appearance: none;
-    background-color: #fff;
-    margin: 0;
-    font: inherit;
-    color: currentcolor;
-    width: 1.15em;
-    height: 1.15em;
-    border: 2px solid currentcolor;
-    transform: translateY(-0.075em);
-    position: relative;
-    cursor: pointer;
-    transition: none;
+    & input[type="checkbox"] {
+        appearance: none;
+        background-color: #fff;
+        margin: 0;
+        font: inherit;
+        color: currentcolor;
+        width: 1.15em;
+        height: 1.15em;
+        border: 2px solid currentcolor;
+        transform: translateY(-0.075em);
+        position: relative;
+        cursor: pointer;
+        transition: none;
 
-    &::before {
-        content: '';
-        position: absolute;
-        background: var(--primary-accent);
-        width: 5px;
-        height: 25px;
-        top: 50%;
-        left: 50%;
-        transition: transform 150ms;
-        transform-origin: center;
-        transform: translate(-50%, -50%) rotate(45deg) scale(0);
-    }
+        &::before {
+            content: '';
+            position: absolute;
+            background: var(--primary-accent);
+            width: 5px;
+            height: 25px;
+            top: 50%;
+            left: 50%;
+            transition: transform 150ms;
+            transform-origin: center;
+            transform: translate(-50%, -50%) rotate(45deg) scale(0);
+        }
 
-    &::after {
-        content: '';
-        position: absolute;
-        background: var(--primary-accent);
-        width: 5px;
-        height: 25px;
-        top: 50%;
-        left: 50%;
-        transition: transform 150ms;
-        transform-origin: center;
-        transform: translate(-50%, -50%) rotate(-45deg) scale(0);
-    }
+        &::after {
+            content: '';
+            position: absolute;
+            background: var(--primary-accent);
+            width: 5px;
+            height: 25px;
+            top: 50%;
+            left: 50%;
+            transition: transform 150ms;
+            transform-origin: center;
+            transform: translate(-50%, -50%) rotate(-45deg) scale(0);
+        }
 
-    &:checked::before {
-        transform: translate(-50%, -50%) rotate(45deg) scale(1);
-    }
+        &:checked::before {
+            transform: translate(-50%, -50%) rotate(45deg) scale(1);
+        }
 
-    &:checked::after {
-        transform: translate(-50%, -50%) rotate(-45deg) scale(1);
-    }
+        &:checked::after {
+            transform: translate(-50%, -50%) rotate(-45deg) scale(1);
+        }
 
-    /* Remove focus ring and border change only when clicking with mouse */
-    &:focus:not(:focus-visible) {
-        outline: none;
-        border-color: currentcolor;
-    }
+        /* Remove focus ring and border change only when clicking with mouse */
+        &:focus:not(:focus-visible) {
+            outline: none;
+            border-color: currentcolor;
+        }
 
-    /* Keep focus ring for keyboard navigation */
-    &:focus-visible {
-        outline: 2px solid var(--primary-highlight);
-        outline-offset: 2px;
+        /* Keep focus ring for keyboard navigation */
+        &:focus-visible {
+            outline: 2px solid var(--primary-highlight);
+            outline-offset: 2px;
+        }
     }
 }
