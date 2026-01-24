@@ -1,5 +1,5 @@
 import { test } from '@substrate-system/tapzero'
-import { waitFor } from '@substrate-system/dom'
+import { waitFor, click } from '@substrate-system/dom'
 import type { CheckBox } from '../src/index.js'
 import '../src/index.js'
 
@@ -93,17 +93,15 @@ test('dispatches change event when clicked', async t => {
     const el = await waitFor('check-box') as CheckBox
     const input = el.querySelector('input') as HTMLInputElement
 
-    let eventDetail: { checked: boolean } | null = null
-    el.addEventListener('change', (e: Event) => {
-        const detail = (e as CustomEvent).detail
-        if (detail) eventDetail = detail
+    el.addEventListener('change', (ev:Event) => {
+        t.ok(ev, 'should dispatch change event')
+        t.equal((ev.target as HTMLInputElement).checked, true,
+            'target should contain checked: true')
+        t.equal(el.querySelector('input')?.checked, true,
+            'element should be checked')
     })
 
-    input.click()
-
-    t.ok(eventDetail, 'should dispatch change event')
-    t.equal(eventDetail!.checked, true, 'detail should contain checked: true')
-    t.equal(el.checked, true, 'element should be checked')
+    click(input)
 })
 
 test('change event reflects unchecking', async t => {
@@ -111,16 +109,16 @@ test('change event reflects unchecking', async t => {
     const el = await waitFor('check-box') as CheckBox
     const input = el.querySelector('input') as HTMLInputElement
 
-    let eventDetail: { checked: boolean } | null = null
+    let changeEventFired = false
     el.addEventListener('change', (e: Event) => {
-        const detail = (e as CustomEvent).detail
-        if (detail) eventDetail = detail
+        changeEventFired = true
+        t.equal((e.target as HTMLInputElement).checked, false,
+            'target should be unchecked')
     })
 
     input.click()
 
-    t.ok(eventDetail, 'should dispatch change event')
-    t.equal(eventDetail!.checked, false, 'detail should contain checked: false')
+    t.ok(changeEventFired, 'should dispatch change event')
     t.equal(el.checked, false, 'element should be unchecked')
 })
 
