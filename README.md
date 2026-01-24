@@ -20,6 +20,7 @@ A web component checkbox.
   * [ESM](#esm)
 - [CSS](#css)
   * [Import CSS](#import-css)
+  * [CSS `@import`](#css-import)
   * [Customize CSS via some variables](#customize-css-via-some-variables)
 - [Use](#use)
   * [JS](#js)
