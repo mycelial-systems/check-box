@@ -52,6 +52,12 @@ import { CheckBox } from '@substrate-system/check-box'
 import '@substrate-system/check-box/css'
 ```
 
+### CSS `@import`
+
+```css
+@import url("@substrate-system/check-box/css");
+```
+
 Or minified:
 ```js
 import '@substrate-system/check-box/min/css'
