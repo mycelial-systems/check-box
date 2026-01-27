@@ -8,6 +8,8 @@ declare global {
 }
 
 export class CheckBox extends HTMLElement {
+    static TAG:string = 'check-box'
+
     static observedAttributes = ['checked', 'disabled', 'name']
     private _input:HTMLInputElement|null = null
 
