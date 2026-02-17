@@ -101,6 +101,9 @@ export class CheckBox extends HTMLElement {
             />
             <span>${labelText}</span>
         </label>`
+
+        // Move checked to the inner input; remove it from the host element
+        this.removeAttribute('checked')
     }
 }
 

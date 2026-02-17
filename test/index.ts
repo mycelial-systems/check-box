@@ -158,6 +158,18 @@ test('attributeChangedCallback updates input when name attribute changes', async
     t.equal(input.name, 'updated-name', 'input name should update when attribute changes')
 })
 
+test('checked attribute is removed from host element after render', async t => {
+    document.body.innerHTML = '<check-box checked>Test</check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    t.ok(
+        !el.hasAttribute('checked'),
+        'checked attribute should be removed from the outer element'
+    )
+    const input = el.querySelector('input') as HTMLInputElement
+    t.equal(input.checked, true, 'inner input should be checked')
+})
+
 test('all done', () => {
     // @ts-expect-error tests
     window.testsFinished = true
