@@ -50,7 +50,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@substrate-system/web-component": "^0.0.40"
+    "@substrate-system/web-component": "^0.0.46"
   },
   "devDependencies": {
     "@substrate-system/debug": "^0.9.54",
@@ -68,9 +68,9 @@
     "markdown-toc": "^1.2.0",
     "postcss": "^8.5.1",
     "postcss-cli": "^11.0.0",
-    "postcss-nesting": "^13.0.1",
-    "stylelint": "^16.19.1",
-    "stylelint-config-standard": "^39.0.1",
+    "postcss-nesting": "^14.0.0",
+    "stylelint": "^17.3.0",
+    "stylelint-config-standard": "^40.0.0",
     "tap-spec": "^5.0.0",
     "typedoc": "^0.28.1",
     "typescript": "^5.9.3",
