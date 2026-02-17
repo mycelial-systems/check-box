@@ -1,6 +1,5 @@
 :root {
     --primary-accent: black;
-    --primary-highlight: #00bbcb;
 }
 
 /**
@@ -29,14 +28,6 @@ check-box {
             font-size: 1.2rem;
             margin-bottom: 0.2em;
         }
-
-        &:focus, &:focus-within {
-            & input[type="checkbox"] {
-                outline-color: var(--primary-accent);
-                border-color: var(--primary-accent);
-                outline-offset: 2px;
-            }
-        }
     }
 
     & input[type="checkbox"] {
@@ -51,7 +42,9 @@ check-box {
         transform: translateY(-0.075em);
         position: relative;
         cursor: pointer;
-        transition: none;
+        transition: all 0.2s;
+        outline: 2px solid transparent;
+        outline-offset: 2px;
 
         &::before {
             content: '';
@@ -89,13 +82,13 @@ check-box {
 
         /* Remove focus ring and border change only when clicking with mouse */
         &:focus:not(:focus-visible) {
-            outline: none;
+            outline-color: transparent;
             border-color: currentcolor;
         }
 
         /* Keep focus ring for keyboard navigation */
-        &:focus-visible {
-            outline: 2px solid var(--primary-highlight);
+        &:focus, &:focus-visible {
+            outline: 2px solid;
             outline-offset: 2px;
         }
     }

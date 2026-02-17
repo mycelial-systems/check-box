@@ -14,26 +14,6 @@ export default defineConfig({
         logOverride: { 'this-is-undefined-in-esm': 'silent' }
     },
     publicDir: '_public',
-    plugins: [
-        {
-            name: 'html-transform',
-            transformIndexHtml (html) {
-                const isProduction = process.env.NODE_ENV === 'production'
-                const isStaging = process.env.NODE_ENV === 'staging'
-
-                let map
-                if (isProduction && !isStaging) {
-                    map = '{ "imports": { "@substrate-system/debug": "data:text/javascript,export default function(){return()=>{}}" } }'
-                } else if (isStaging) {
-                    map = '{ "imports": { "@substrate-system/debug": "/vendor/debug.js" } }'
-                } else {  // is dev
-                    map = '{ "imports": { "@substrate-system/debug": "../node_modules/@substrate-system/debug/dist/index.js" } }'
-                }
-
-                return html.replace('<%- IMPORT_MAP_CONTENT %>', map)
-            },
-        },
-    ],
     css: {
         postcss: {
             plugins: [
