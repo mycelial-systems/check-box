@@ -17,6 +17,7 @@ A web component checkbox.
 
 - [Install](#install)
 - [API](#api)
+  * [Example](#example)
   * [Label](#label)
   * [Attributes](#attributes)
   * [JavaScript API](#javascript-api)
