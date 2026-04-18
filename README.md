@@ -42,6 +42,24 @@ npm i -S @substrate-system/check-box
 
 ## API
 
+### Example
+
+```js
+import { CheckBox } from '@substrate-system/check-box'
+import '@substrate-system/check-box/css'
+// tag name is at .TAG
+
+document.body.innerHTML += `
+  <${CheckBox.TAG}>Example Label Text</${CheckBox.TAG}>
+`
+
+const box = document.querySelector(CheckBox.TAG)
+
+box?.addEventListener('change', ev => {
+  console.log('Checked:', event.target.checked)
+})
+```
+
 ### Label
 
 The inner text content is used for the label's value.
