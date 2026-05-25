@@ -8,3 +8,4 @@ public
 example/_public/vendor
 docs
 .claude
+.playwright-mcp

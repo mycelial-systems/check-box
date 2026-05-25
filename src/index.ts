@@ -59,9 +59,32 @@ export class CheckBox extends HTMLElement {
     async connectedCallback () {
         this.render()
         this._input = this.querySelector('input')
+        this._input?.addEventListener('change', this._syncChecked)
     }
 
-    attributeChangedCallback (name:string, oldValue:string, newValue:string) {
+    disconnectedCallback () {
+        this._input?.removeEventListener('change', this._syncChecked)
+    }
+
+    // Keep host `checked` attribute in sync with user-driven input toggles
+    // so external observers (CSS selectors, querySelectorAll) see the
+    // current state.
+    private _syncChecked = ():void => {
+        if (!this._input) return
+        if (this._input.checked) {
+            if (!this.hasAttribute('checked')) {
+                this.setAttribute('checked', '')
+            }
+        } else if (this.hasAttribute('checked')) {
+            this.removeAttribute('checked')
+        }
+    }
+
+    attributeChangedCallback (
+        name:string,
+        _oldValue:string,
+        newValue:string
+    ) {
         if (!this._input) return
 
         switch (name) {
@@ -92,18 +115,20 @@ export class CheckBox extends HTMLElement {
             this.classList.add('disabled')
         }
 
-        this.innerHTML = `<label class="checkbox-label">
-            <input
-                type="checkbox"
-                ${name ? `name="${name}"` : ''}
-                ${isChecked ? 'checked' : ''}
-                ${isDisabled ? 'disabled' : ''}
-            />
-            <span>${labelText}</span>
-        </label>`
+        const label = document.createElement('label')
+        label.className = 'checkbox-label'
 
-        // Move checked to the inner input; remove it from the host element
-        this.removeAttribute('checked')
+        const input = document.createElement('input')
+        input.type = 'checkbox'
+        if (name) input.name = name
+        input.checked = isChecked
+        input.disabled = isDisabled
+
+        const span = document.createElement('span')
+        span.textContent = labelText
+
+        label.append(input, span)
+        this.replaceChildren(label)
     }
 }
 

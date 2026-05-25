@@ -158,16 +158,77 @@ test('attributeChangedCallback updates input when name attribute changes', async
     t.equal(input.name, 'updated-name', 'input name should update when attribute changes')
 })
 
-test('checked attribute is removed from host element after render', async t => {
+test('checked attribute is preserved on host after render', async t => {
     document.body.innerHTML = '<check-box checked>Test</check-box>'
     const el = await waitFor('check-box') as CheckBox
 
     t.ok(
-        !el.hasAttribute('checked'),
-        'checked attribute should be removed from the outer element'
+        el.hasAttribute('checked'),
+        'checked attribute should remain on the host element'
     )
     const input = el.querySelector('input') as HTMLInputElement
     t.equal(input.checked, true, 'inner input should be checked')
+})
+
+test('host checked attribute reflects user-driven state changes', async t => {
+    document.body.innerHTML = '<check-box>Test</check-box>'
+    const el = await waitFor('check-box') as CheckBox
+    const input = el.querySelector('input') as HTMLInputElement
+
+    t.ok(!el.hasAttribute('checked'), 'starts without checked attribute')
+
+    input.click()
+    t.ok(
+        el.hasAttribute('checked'),
+        'host reflects checked state after user click'
+    )
+
+    input.click()
+    t.ok(
+        !el.hasAttribute('checked'),
+        'host reflects unchecked state after second click'
+    )
+})
+
+test('label text is rendered as text, not parsed as HTML', async t => {
+    const el = document.createElement('check-box') as CheckBox
+    el.textContent = '<script>window.__xssRan = true</script>danger'
+    document.body.replaceChildren(el)
+    await waitFor('check-box')
+
+    const span = el.querySelector('span') as HTMLSpanElement
+    t.equal(
+        span.textContent,
+        '<script>window.__xssRan = true</script>danger',
+        'angle brackets render as text'
+    )
+    t.equal(
+        el.querySelectorAll('script').length,
+        0,
+        'no script element is created'
+    )
+    // @ts-expect-error test-only window prop
+    t.ok(!window.__xssRan, 'injected script does not execute')
+})
+
+test('name attribute with special characters is set safely', async t => {
+    const el = document.createElement('check-box') as CheckBox
+    el.setAttribute('name', 'tricky" onfocus="x')
+    el.textContent = 'Test'
+    document.body.replaceChildren(el)
+    await waitFor('check-box')
+
+    const input = el.querySelector('input') as HTMLInputElement
+    t.equal(
+        input.name,
+        'tricky" onfocus="x',
+        'input.name preserves quotes verbatim'
+    )
+    t.equal(
+        input.getAttribute('onfocus'),
+        null,
+        'no onfocus attribute is created'
+    )
 })
 
 test('all done', () => {
