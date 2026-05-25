@@ -10,7 +10,7 @@ declare global {
 export class CheckBox extends HTMLElement {
     static TAG:string = 'check-box'
 
-    static observedAttributes = ['checked', 'disabled', 'name']
+    static observedAttributes = ['checked', 'disabled', 'name', 'value']
     private _input:HTMLInputElement|null = null
 
     get checked ():boolean {
@@ -54,6 +54,17 @@ export class CheckBox extends HTMLElement {
             this._input.name = value
         }
         this.setAttribute('name', value)
+    }
+
+    get value ():string {
+        return this._input?.value ?? ''
+    }
+
+    set value (value:string) {
+        if (this._input) {
+            this._input.value = value
+        }
+        this.setAttribute('value', value)
     }
 
     async connectedCallback () {
@@ -102,6 +113,11 @@ export class CheckBox extends HTMLElement {
             case 'name':
                 this._input.name = newValue ?? ''
                 break
+            case 'value':
+                if (newValue !== null) {
+                    this._input.value = newValue
+                }
+                break
         }
     }
 
@@ -118,6 +134,9 @@ export class CheckBox extends HTMLElement {
         const input = document.createElement('input')
         input.type = 'checkbox'
         if (name) input.name = name
+        if (this.hasAttribute('value')) {
+            input.value = this.getAttribute('value') ?? ''
+        }
         input.checked = isChecked
         input.disabled = isDisabled
 

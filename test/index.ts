@@ -315,6 +315,45 @@ test('name attribute with special characters is set safely', async t => {
     )
 })
 
+test('value attribute is propagated to inner input', async t => {
+    document.body.innerHTML = '<check-box value="yes">Test</check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    t.equal(el.value, 'yes', 'host.value is "yes"')
+    const input = el.querySelector('input') as HTMLInputElement
+    t.equal(input.value, 'yes', 'inner input value is "yes"')
+})
+
+test('bare input (no label) propagates value attribute', async t => {
+    document.body.innerHTML = '<check-box value="agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    const input = el.querySelector('input') as HTMLInputElement
+    t.equal(input.value, 'agree', 'inner input value is "agree"')
+})
+
+test('setting value property updates attribute and input', async t => {
+    document.body.innerHTML = '<check-box>Test</check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.value = 'changed'
+    t.equal(el.value, 'changed', 'property should update')
+    t.equal(el.getAttribute('value'), 'changed', 'attribute should update')
+    const input = el.querySelector('input') as HTMLInputElement
+    t.equal(input.value, 'changed', 'input value should update')
+})
+
+test('attributeChangedCallback updates input when value attr changes',
+    async t => {
+        document.body.innerHTML = '<check-box>Test</check-box>'
+        const el = await waitFor('check-box') as CheckBox
+        const input = el.querySelector('input') as HTMLInputElement
+
+        el.setAttribute('value', 'updated')
+        t.equal(input.value, 'updated',
+            'input value should update when attribute changes')
+    })
+
 test('all done', () => {
     // @ts-expect-error tests
     window.testsFinished = true
