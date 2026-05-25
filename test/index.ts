@@ -10,6 +10,90 @@ test('renders with label text', async t => {
     t.ok(el, 'should find the element')
     const span = el.querySelector('span')
     t.equal(span?.textContent, 'Accept terms', 'should render label text')
+
+    const labels = el.querySelectorAll('label.checkbox-label')
+    t.equal(labels.length, 1,
+        'exactly one label.checkbox-label wraps the input')
+    const inputs = labels[0]?.querySelectorAll('input[type="checkbox"]')
+    t.equal(inputs?.length, 1,
+        'the label wraps exactly one input[type="checkbox"]')
+})
+
+test('renders bare input when no label text is provided', async t => {
+    document.body.innerHTML = '<check-box></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    t.equal(el.querySelector('label'), null,
+        'no label element is rendered')
+    const input = el.querySelector('input[type="checkbox"]')
+    t.ok(input, 'an input[type="checkbox"] is present')
+})
+
+test('whitespace-only content is treated as no label', async t => {
+    document.body.innerHTML = '<check-box>   </check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    t.equal(el.querySelector('label'), null,
+        'no label element is rendered for whitespace-only content')
+    const input = el.querySelector('input[type="checkbox"]')
+    t.ok(input, 'an input[type="checkbox"] is present')
+})
+
+test('bare input still reflects checked attribute', async t => {
+    document.body.innerHTML = '<check-box checked></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    t.equal(el.checked, true, 'host.checked is true')
+    t.equal(el.hasAttribute('checked'), true,
+        'host retains checked attribute')
+    const input = el.querySelector('input') as HTMLInputElement
+    t.equal(input.checked, true, 'inner input is checked')
+})
+
+test('bare input still reflects disabled attribute and disabled class',
+    async t => {
+        document.body.innerHTML = '<check-box disabled></check-box>'
+        const el = await waitFor('check-box') as CheckBox
+
+        t.equal(el.disabled, true, 'host.disabled is true')
+        t.equal(el.classList.contains('disabled'), true,
+            'host has disabled class')
+        t.equal(el.hasAttribute('disabled'), true,
+            'host retains disabled attribute')
+        const input = el.querySelector('input') as HTMLInputElement
+        t.equal(input.disabled, true, 'inner input is disabled')
+    })
+
+test('bare input still carries name attribute', async t => {
+    document.body.innerHTML = '<check-box name="agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    t.equal(el.name, 'agree', 'host.name is "agree"')
+    const input = el.querySelector('input') as HTMLInputElement
+    t.equal(input.name, 'agree', 'inner input name is "agree"')
+})
+
+test('bare input dispatches change event on click and syncs host ' +
+    'checked attribute', async t => {
+    document.body.innerHTML = '<check-box></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+    const input = el.querySelector('input') as HTMLInputElement
+
+    let changeEventCount = 0
+    el.addEventListener('change', () => {
+        changeEventCount++
+    })
+
+    click(input)
+    t.equal(changeEventCount, 1, 'change event fired on first click')
+    t.equal(el.checked, true, 'host.checked is true after first click')
+    t.equal(el.hasAttribute('checked'), true,
+        'host has checked attribute after first click')
+
+    click(input)
+    t.equal(changeEventCount, 2, 'change event fired on second click')
+    t.equal(el.hasAttribute('checked'), false,
+        'host checked attribute removed after second click')
 })
 
 test('default state is unchecked and enabled', async t => {

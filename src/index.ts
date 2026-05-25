@@ -115,14 +115,19 @@ export class CheckBox extends HTMLElement {
             this.classList.add('disabled')
         }
 
-        const label = document.createElement('label')
-        label.className = 'checkbox-label'
-
         const input = document.createElement('input')
         input.type = 'checkbox'
         if (name) input.name = name
         input.checked = isChecked
         input.disabled = isDisabled
+
+        if (labelText === '') {
+            this.replaceChildren(input)
+            return
+        }
+
+        const label = document.createElement('label')
+        label.className = 'checkbox-label'
 
         const span = document.createElement('span')
         span.textContent = labelText
