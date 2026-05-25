@@ -39,14 +39,14 @@ relative to the repository root (`/Users/nick/code/check-box/`):
 before any change is made, so later failures can be attributed to
 this feature's diffs rather than to pre-existing breakage.
 
-- [ ] T001 Run `npm install` from the repository root to ensure
+- [X] T001 Run `npm install` from the repository root to ensure
   `node_modules/` reflects current `package.json` (no new deps
   are added by this feature, but the install must succeed before
   tests can run)
-- [ ] T002 Run `npm test && npm run lint && npm run stylelint` from
+- [X] T002 Run `npm test && npm run lint && npm run stylelint` from
   the repository root and confirm all three exit zero on the
   pre-change baseline. Record the pre-change passing-test count so
-  the post-change run can be compared against it.
+  the post-change run can be compared against it. (Baseline: 48 tests pass.)
 
 **Checkpoint**: Baseline is green. Any failure after this point is
 attributable to this feature's changes.
@@ -91,35 +91,35 @@ Decision 5, all assertions exercise observable DOM state and the
 public API — none assert on rendered HTML strings or documentation
 copy. Tests must FAIL before T010 begins.
 
-- [ ] T003 [P] [US1] Add test `renders bare input when no label
+- [X] T003 [P] [US1] Add test `renders bare input when no label
   text is provided` to `test/index.ts`. Fixture:
   `<check-box></check-box>`. Assert
   `el.querySelector('label') === null` and
   `el.querySelector('input[type="checkbox"]')` returns an element.
   Maps to acceptance scenario 1 and SC-001.
-- [ ] T004 [P] [US1] Add test `whitespace-only content is treated
+- [X] T004 [P] [US1] Add test `whitespace-only content is treated
   as no label` to `test/index.ts`. Fixture:
   `<check-box>   </check-box>` (containing spaces). Assert
   `el.querySelector('label') === null` and an
   `input[type="checkbox"]` is present. Maps to acceptance
   scenario 3 and the whitespace edge case.
-- [ ] T005 [P] [US1] Add test `bare input still reflects checked
+- [X] T005 [P] [US1] Add test `bare input still reflects checked
   attribute` to `test/index.ts`. Fixture:
   `<check-box checked></check-box>`. Assert `el.checked === true`,
   `el.hasAttribute('checked') === true`, and the inner
   `input.checked === true`. Maps to the bare + `checked` edge case.
-- [ ] T006 [P] [US1] Add test `bare input still reflects disabled
+- [X] T006 [P] [US1] Add test `bare input still reflects disabled
   attribute and disabled class` to `test/index.ts`. Fixture:
   `<check-box disabled></check-box>`. Assert `el.disabled === true`,
   `el.classList.contains('disabled') === true`,
   `el.hasAttribute('disabled') === true`, and the inner
   `input.disabled === true`. Maps to the bare + `disabled` edge case.
-- [ ] T007 [P] [US1] Add test `bare input still carries name
+- [X] T007 [P] [US1] Add test `bare input still carries name
   attribute` to `test/index.ts`. Fixture:
   `<check-box name="agree"></check-box>`. Assert
   `el.name === 'agree'` and the inner `input.name === 'agree'`.
   Maps to the bare + `name` edge case.
-- [ ] T008 [P] [US1] Add test `bare input dispatches change event
+- [X] T008 [P] [US1] Add test `bare input dispatches change event
   on click and syncs host checked attribute` to `test/index.ts`.
   Fixture: `<check-box></check-box>`. Attach a `change` listener
   on the host; click the inner input via
@@ -127,7 +127,7 @@ copy. Tests must FAIL before T010 begins.
   `el.checked === true` afterwards, and `el.hasAttribute('checked')`
   is `true`. Click again; assert the host's `checked` attribute is
   removed. Maps to acceptance scenario 4 and FR-005.
-- [ ] T009 [US1] Extend the existing test
+- [X] T009 [US1] Extend the existing test
   `'renders with label text'` in `test/index.ts` to also assert
   positively that exactly one `<label class="checkbox-label">`
   wraps exactly one `<input type="checkbox">` (give SC-002 a
@@ -144,7 +144,7 @@ tests, do not proceed to T010.
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Modify the `render()` method in `src/index.ts` to
+- [X] T010 [US1] Modify the `render()` method in `src/index.ts` to
   branch on rendering mode. Steps inside `render()`:
   1. Compute `labelText` as `this.textContent?.trim() || ''`
      (already present; do not duplicate).
@@ -163,7 +163,7 @@ tests, do not proceed to T010.
      branch), so it fires for both shapes.
   Per `research.md` Decision 3, do not split `render()` into
   helper methods.
-- [ ] T011 [US1] Re-run `npm test` and confirm the full test
+- [X] T011 [US1] Re-run `npm test` and confirm the full test
   suite passes — tests T003–T008 must now PASS, T009 must still
   pass, and the pre-existing tests from the baseline (T002)
   must all still pass with no regressions in count or content.
@@ -180,25 +180,25 @@ quickstart contract holds.
 the quickstart manual sanity check, and the project's lint /
 build pipeline before the feature is considered done.
 
-- [ ] T012 [US1] Execute every step of
+- [X] T012 [US1] Execute every step of
   `/specs/001-optional-label/quickstart.md` against a running
   `npm start` (Shape A unchanged in step 2; Shape B for each of
   the five fixtures in step 3; visual SC-004 check in step 4).
   Record any deviations from the contract; deviations are bugs
   in T010, not bugs in the quickstart.
-- [ ] T013 [P] Run `npm run lint` from the repository root and
+- [X] T013 [P] Run `npm run lint` from the repository root and
   confirm it exits zero. Per the global guidance, do NOT modify
   ESLint settings to make the change pass; if a lint error
   appears in `src/index.ts` or `test/index.ts`, fix the code.
-- [ ] T014 [P] Run `npm run stylelint` from the repository root
+- [X] T014 [P] Run `npm run stylelint` from the repository root
   and confirm it exits zero. `src/index.css` is NOT modified by
   this feature, so this should pass unchanged from the baseline.
-- [ ] T015 Run `npm run build` from the repository root and
+- [X] T015 Run `npm run build` from the repository root and
   confirm it exits zero. Spot-check the published shape: the
   bundle size in `dist/` should be within rounding distance of
   the pre-change baseline (the diff adds one `if/else` branch
   and removes one allocation in the empty case).
-- [ ] T016 Re-verify the Constitution Check section of
+- [X] T016 Re-verify the Constitution Check section of
   `plan.md` against the final implementation: Web Standards First
   (no framework API added), Accessibility (consumer contract for
   external labelling is documented in
