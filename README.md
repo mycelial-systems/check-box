@@ -19,6 +19,7 @@ A web component checkbox.
 - [API](#api)
   * [Example](#example)
   * [Label](#label)
+  * [Render the markup yourself](#render-the-markup-yourself)
   * [Attributes](#attributes)
   * [JavaScript API](#javascript-api)
   * [Events](#events)
@@ -51,7 +52,7 @@ import '@substrate-system/check-box/css'
 // tag name is at .TAG
 
 document.body.innerHTML += `
-  <${CheckBox.TAG}>Example Label Text</${CheckBox.TAG}>
+  <${CheckBox.TAG} label="Example Label Text"></${CheckBox.TAG}>
 `
 
 const box = document.querySelector(CheckBox.TAG)
@@ -63,11 +64,38 @@ box?.addEventListener('change', ev => {
 
 ### Label
 
-The inner text content is used for the label's value.
+Set the label text with the `label` attribute. It is rendered as text,
+not HTML.
 
 ```html
-<check-box>My label text</check-box>
+<check-box label="My label text"></check-box>
 ```
+
+If there is no `label` attribute, the inner text content is used
+instead. Prefer the attribute: the text content is replaced when the
+element renders, which breaks a framework that owns those child nodes.
+
+Without a label, a bare `<input>` is rendered. Give it an accessible
+name with `aria-label` or `aria-labelledby`.
+
+### Render the markup yourself
+
+If the host already contains an `<input type="checkbox">` when it
+connects, the element keeps that node and only adds behavior. Nothing
+is replaced. Use this with a framework like Preact, so the framework
+owns every node.
+
+```html
+<check-box name="metric">
+  <label class="checkbox-label">
+    <input type="checkbox">
+    <span>Show metric</span>
+  </label>
+</check-box>
+```
+
+The `label` attribute is ignored in this case, and the inner input's
+own attributes are left alone.
 
 ### Attributes
 
@@ -88,6 +116,33 @@ Takes standard input attributes.
   <check-box name="newsletter">Subscribe to newsletter</check-box>
   ```
 
+- **`label`** - String attribute. The label text. See [Label](#label).
+
+These are copied to the inner `<input>` and stay on the host. Removing
+one from the host removes it from the input too:
+
+`checked`, `disabled`, `name`, `value`, `required`, and `form`.
+
+These describe the focusable control, so they are moved to the inner
+`<input>` and removed from the host when the element renders:
+
+`id`, `tabindex`, `autofocus`, and every `aria-*` attribute.
+
+Use `aria-describedby` to link a hint or an error message to the
+checkbox.
+
+```html
+<check-box label="Show metric" aria-describedby="metric-hint">
+</check-box>
+<p id="metric-hint">Adds the metric to the chart.</p>
+```
+
+Because they are moved, changing one of these on the host after the
+element renders does nothing. Change it on the inner input instead,
+with the `control` property. When you
+[render the markup yourself](#render-the-markup-yourself), nothing is
+moved: put these attributes on your `<input>` directly.
+
 
 ### JavaScript API
 
@@ -107,6 +162,17 @@ checkbox.disabled = true
 // Get/set name
 console.log(checkbox.name)  // ""
 checkbox.name = "myCheckbox"
+
+// Get/set value
+console.log(checkbox.value)  // "on"
+checkbox.value = "yes"
+
+// The inner input
+checkbox.control?.setAttribute('aria-invalid', 'true')
+
+// Get/set the id of the inner input
+console.log(checkbox.inputId)  // ""
+checkbox.inputId = "my-checkbox"
 ```
 
 
@@ -165,12 +231,23 @@ import '@substrate-system/check-box/min/css'
 
 ### Customize CSS via some variables
 
+These variables are shared with the other `@substrate-system` form
+controls, so an app can set them once. Each one has a fallback.
+
 ```css
-check-box {
-  --primary-accent: black;
-  --primary-highlight: #00bbcb;
+:root {
+  --substrate-accent: black;  /* the check mark */
+  --substrate-surface: #fff;  /* the box background */
+  --substrate-border: currentColor;  /* the box border */
+  --substrate-focus: currentColor;  /* focus ring color */
+  --substrate-focus-width: 2px;  /* focus ring width */
+  --substrate-radius: 0;  /* box corners */
 }
 ```
+
+`--primary-accent` still works as a fallback for `--substrate-accent`.
+
+The label text inherits its font size.
 
 
 ## Use

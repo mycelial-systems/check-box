@@ -1,7 +1,3 @@
-:root {
-    --primary-accent: black;
-}
-
 /**
  * Don't show until JavaScript is ready
  */
@@ -20,36 +16,35 @@ check-box {
         cursor: pointer;
         width: fit-content;
 
-        & input {
-            border-radius: 0;
-        }
-
         & span {
-            font-size: 1.2rem;
             margin-bottom: 0.2em;
         }
     }
 
     & input[type="checkbox"] {
         appearance: none;
-        background-color: #fff;
+        background-color: var(--substrate-surface, #fff);
+        border-radius: var(--substrate-radius, 0);
         margin: 0;
         font: inherit;
         color: currentcolor;
         width: 1.15em;
         height: 1.15em;
-        border: 2px solid currentcolor;
+        border: 2px solid var(--substrate-border, currentcolor);
         transform: translateY(-0.075em);
         position: relative;
         cursor: pointer;
         transition: all 0.2s;
-        outline: 2px solid transparent;
+        outline: var(--substrate-focus-width, 2px) solid transparent;
         outline-offset: 2px;
 
         &::before {
             content: '';
             position: absolute;
-            background: var(--primary-accent);
+            background: var(
+                --substrate-accent,
+                var(--primary-accent, black)
+            );
             width: 18%;
             height: 100%;
             top: 50%;
@@ -62,7 +57,10 @@ check-box {
         &::after {
             content: '';
             position: absolute;
-            background: var(--primary-accent);
+            background: var(
+                --substrate-accent,
+                var(--primary-accent, black)
+            );
             width: 18%;
             height: 100%;
             top: 50%;
@@ -83,12 +81,13 @@ check-box {
         /* Remove focus ring and border change only when clicking with mouse */
         &:focus:not(:focus-visible) {
             outline-color: transparent;
-            border-color: currentcolor;
+            border-color: var(--substrate-border, currentcolor);
         }
 
         /* Keep focus ring for keyboard navigation */
         &:focus, &:focus-visible {
-            outline: 2px solid;
+            outline: var(--substrate-focus-width, 2px) solid
+                var(--substrate-focus, currentcolor);
             outline-offset: 2px;
         }
     }

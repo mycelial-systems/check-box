@@ -354,6 +354,169 @@ test('attributeChangedCallback updates input when value attr changes',
             'input value should update when attribute changes')
     })
 
+test('hydrates existing markup without replacing the input', async t => {
+    const el = document.createElement('check-box') as CheckBox
+    const label = document.createElement('label')
+    label.className = 'checkbox-label'
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    const span = document.createElement('span')
+    span.textContent = 'Show metric'
+    label.append(input, span)
+    el.append(label)
+
+    let clicks = 0
+    input.addEventListener('click', () => clicks++)
+
+    document.body.replaceChildren(el)
+    await waitFor('check-box')
+
+    t.equal(el.querySelector('input'), input, 'same input node is kept')
+    t.equal(el.querySelector('label'), label, 'same label node is kept')
+    t.equal(el.querySelectorAll('input').length, 1, 'no extra input')
+
+    click(input)
+    t.equal(clicks, 1, 'listener attached before connecting still fires')
+    t.equal(el.checked, true, 'host.checked reads the hydrated input')
+    t.ok(el.hasAttribute('checked'), 'host reflects the click')
+})
+
+test('hydration forwards host attributes but keeps the input\'s own',
+    async t => {
+        const el = document.createElement('check-box') as CheckBox
+        el.setAttribute('name', 'metric')
+        const input = document.createElement('input')
+        input.type = 'checkbox'
+        input.setAttribute('aria-describedby', 'own-hint')
+        el.append(input)
+
+        document.body.replaceChildren(el)
+        await waitFor('check-box')
+
+        t.equal(input.name, 'metric', 'host name is forwarded')
+        t.equal(input.getAttribute('aria-describedby'), 'own-hint',
+            'attributes absent from the host are left alone')
+    })
+
+test('label attribute renders a label', async t => {
+    document.body.innerHTML = '<check-box label="Accept terms"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+    const input = el.querySelector('input') as HTMLInputElement
+
+    t.equal(input.labels?.length, 1, 'the input is labelled')
+    t.equal(el.querySelector('span')?.textContent, el.getAttribute('label'),
+        'label text comes from the attribute')
+})
+
+test('label attribute is rendered as text', async t => {
+    const el = document.createElement('check-box') as CheckBox
+    el.setAttribute('label', '<img src="x" onerror="window.__xss = 1">')
+    document.body.replaceChildren(el)
+    await waitFor('check-box')
+
+    t.equal(el.querySelectorAll('img').length, 0, 'no img element is created')
+})
+
+test('changing the label attribute keeps the same input', async t => {
+    document.body.innerHTML = '<check-box label="One"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+    const input = el.querySelector('input') as HTMLInputElement
+
+    el.setAttribute('label', 'Two')
+    t.equal(el.querySelector('span')?.textContent, el.getAttribute('label'),
+        'label text updates')
+    t.equal(el.querySelector('input'), input, 'input node is kept')
+
+    el.removeAttribute('label')
+    t.equal(el.querySelector('label'), null, 'label is removed')
+    t.equal(el.querySelector('input'), input, 'input node is still kept')
+})
+
+test('focus and aria-* attributes move to the inner input', async t => {
+    document.body.innerHTML = '<check-box label="Show metric" ' +
+        'aria-describedby="hint" tabindex="0" id="metric" autofocus>' +
+        '</check-box>'
+    const el = await waitFor('check-box') as CheckBox
+    const input = el.querySelector('input') as HTMLInputElement
+
+    t.equal(input.getAttribute('aria-describedby'), 'hint',
+        'input gets aria-describedby')
+    t.equal(input.tabIndex, 0, 'input gets tabindex')
+    t.equal(input.id, 'metric', 'input gets the id')
+    t.ok(input.hasAttribute('autofocus'), 'input gets autofocus')
+
+    t.ok(!el.hasAttribute('aria-describedby'),
+        'host no longer has aria-describedby')
+    t.ok(!el.hasAttribute('tabindex'), 'host no longer has tabindex')
+    t.ok(!el.hasAttribute('id'), 'host no longer has the id')
+    t.ok(!el.hasAttribute('autofocus'), 'host no longer has autofocus')
+})
+
+test('hydration does not move host attributes or restore removed ones',
+    async t => {
+        const el = document.createElement('check-box') as CheckBox
+        const input = document.createElement('input')
+        input.type = 'checkbox'
+        input.setAttribute('aria-invalid', 'true')
+        el.append(input)
+
+        document.body.replaceChildren(el)
+        await waitFor('check-box')
+
+        input.removeAttribute('aria-invalid')
+        el.setAttribute('name', 'metric')
+        t.ok(!input.hasAttribute('aria-invalid'),
+            'aria-invalid is not added back')
+    })
+
+test('control and inputId expose the inner input', async t => {
+    document.body.innerHTML = '<check-box id="first"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+    const input = el.querySelector('input') as HTMLInputElement
+
+    t.equal(el.control, input, 'control is the inner input')
+    t.equal(el.inputId, 'first', 'inputId reads the inner id')
+
+    el.inputId = 'second'
+    t.equal(input.id, 'second', 'setting inputId changes the inner id')
+    t.equal(el.id, '', 'host still has no id')
+})
+
+test('inputId set before render ends up on the inner input', async t => {
+    const el = document.createElement('check-box') as CheckBox
+    el.inputId = 'early'
+    document.body.replaceChildren(el)
+    await waitFor('check-box')
+
+    t.equal(el.control?.id, 'early', 'inner input has the id')
+    t.equal(el.id, '', 'host has no id')
+})
+
+test('required and form are mirrored, including removal', async t => {
+    document.body.innerHTML = '<check-box required form="f"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+    const input = el.querySelector('input') as HTMLInputElement
+
+    t.equal(input.required, true, 'required is forwarded')
+    t.equal(input.getAttribute('form'), 'f', 'form is forwarded')
+    t.ok(el.hasAttribute('required'), 'host keeps required')
+    t.ok(el.hasAttribute('form'), 'host keeps form')
+
+    el.removeAttribute('required')
+    el.removeAttribute('form')
+    t.equal(input.required, false, 'required is removed')
+    t.ok(!input.hasAttribute('form'), 'form is removed')
+})
+
+test('removing value from the host removes it from the input', async t => {
+    document.body.innerHTML = '<check-box value="yes"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+    const input = el.querySelector('input') as HTMLInputElement
+
+    el.removeAttribute('value')
+    t.ok(!input.hasAttribute('value'), 'inner value attribute is removed')
+})
+
 test('all done', () => {
     // @ts-expect-error tests
     window.testsFinished = true

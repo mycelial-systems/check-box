@@ -7,11 +7,29 @@ declare global {
     }
 }
 
+/**
+ * Host attributes that are mirrored onto the inner input. They stay on the
+ * host, so a framework that later removes one from the host also removes it
+ * from the input.
+ */
+const MIRRORED = ['checked', 'disabled', 'name', 'value', 'required', 'form']
+
+/**
+ * Host attributes that describe the focusable control, so they are moved to
+ * the inner input when this element renders it. `aria-*` attributes are
+ * moved too. Left on the host, these would make a second tab stop, or fail
+ * axe's `aria-prohibited-attr`, because the host has no role.
+ */
+const MOVED = ['id', 'tabindex', 'autofocus']
+
 export class CheckBox extends HTMLElement {
     static TAG:string = 'check-box'
 
-    static observedAttributes = ['checked', 'disabled', 'name', 'value']
+    static observedAttributes = [...MIRRORED, 'label']
     private _input:HTMLInputElement|null = null
+    // true if this element created the inner markup, false if it hydrated
+    // markup that was already there
+    private _ownsMarkup = false
 
     get checked ():boolean {
         return this._input?.checked ?? false
@@ -67,9 +85,32 @@ export class CheckBox extends HTMLElement {
         this.setAttribute('value', value)
     }
 
+    /**
+     * The inner input. Use it to change a moved attribute, like `aria-*` or
+     * `tabindex`, after connect.
+     */
+    get control ():HTMLInputElement|null {
+        return this._input
+    }
+
+    /**
+     * The `id` of the inner input. Before the element renders, this is the
+     * host `id`, which is moved to the input on render.
+     */
+    get inputId ():string {
+        return this._input ? this._input.id : this.id
+    }
+
+    set inputId (value:string) {
+        if (this._input) {
+            this._input.id = value
+        } else {
+            this.id = value
+        }
+    }
+
     async connectedCallback () {
         this.render()
-        this._input = this.querySelector('input')
         this._input?.addEventListener('change', this._syncChecked)
     }
 
@@ -94,51 +135,57 @@ export class CheckBox extends HTMLElement {
     attributeChangedCallback (
         name:string,
         _oldValue:string,
-        newValue:string
+        newValue:string|null
     ) {
         if (!this._input) return
 
-        switch (name) {
-            case 'checked':
-                this._input.checked = newValue !== null
-                break
-            case 'disabled':
-                this._input.disabled = newValue !== null
-                if (newValue !== null) {
-                    this.classList.add('disabled')
-                } else {
-                    this.classList.remove('disabled')
-                }
-                break
-            case 'name':
-                this._input.name = newValue ?? ''
-                break
-            case 'value':
-                if (newValue !== null) {
-                    this._input.value = newValue
-                }
-                break
+        if (name === 'label') {
+            if (this._ownsMarkup) this._renderLabel(newValue?.trim() ?? '')
+            return
+        }
+
+        this._forward(name, newValue)
+    }
+
+    /**
+     * Copy one host attribute onto the inner input.
+     */
+    private _forward (name:string, value:string|null) {
+        const input = this._input
+        if (!input) return
+
+        if (name === 'checked') {
+            input.checked = value !== null
+            return
+        }
+
+        if (name === 'disabled') {
+            if (value !== null) {
+                this.classList.add('disabled')
+            } else {
+                this.classList.remove('disabled')
+            }
+        }
+
+        if (value === null) {
+            input.removeAttribute(name)
+        } else {
+            input.setAttribute(name, value)
         }
     }
 
-    render () {
-        const labelText = this.textContent?.trim() || ''
-        const isChecked = this.hasAttribute('checked')
-        const isDisabled = this.hasAttribute('disabled')
-        const name = this.getAttribute('name') || ''
+    /**
+     * The `label` attribute, or the text content if there is no `label`
+     * attribute.
+     */
+    private _labelText ():string {
+        return this.hasAttribute('label') ?
+            (this.getAttribute('label') ?? '').trim() :
+            (this.textContent?.trim() || '')
+    }
 
-        if (isDisabled) {
-            this.classList.add('disabled')
-        }
-
-        const input = document.createElement('input')
-        input.type = 'checkbox'
-        if (name) input.name = name
-        if (this.hasAttribute('value')) {
-            input.value = this.getAttribute('value') ?? ''
-        }
-        input.checked = isChecked
-        input.disabled = isDisabled
+    private _renderLabel (labelText:string) {
+        const input = this._input!
 
         if (labelText === '') {
             this.replaceChildren(input)
@@ -153,6 +200,48 @@ export class CheckBox extends HTMLElement {
 
         label.append(input, span)
         this.replaceChildren(label)
+    }
+
+    render () {
+        // Hydrate if the markup is already here, so a framework that
+        // rendered it keeps ownership of every node.
+        const existing = this.querySelector<HTMLInputElement>(
+            'input[type="checkbox"]'
+        )
+
+        // When hydrating, leave the input's own attributes alone. The
+        // framework that rendered it should set `aria-*`, `id`, and the rest
+        // on the input directly.
+        if (existing) {
+            this._input = existing
+            this._forwardMirrored()
+            return
+        }
+
+        const labelText = this._labelText()
+        const input = document.createElement('input')
+        input.type = 'checkbox'
+        this._input = input
+        this._ownsMarkup = true
+
+        // Before the input is in the DOM, so `autofocus` takes effect
+        this._forwardMirrored()
+        for (const { name, value } of Array.from(this.attributes)) {
+            if (MOVED.includes(name) || name.startsWith('aria-')) {
+                input.setAttribute(name, value)
+                this.removeAttribute(name)
+            }
+        }
+
+        this._renderLabel(labelText)
+    }
+
+    private _forwardMirrored () {
+        for (const name of MIRRORED) {
+            if (this.hasAttribute(name)) {
+                this._forward(name, this.getAttribute(name))
+            }
+        }
     }
 }
 
