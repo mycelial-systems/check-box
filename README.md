@@ -94,8 +94,10 @@ owns every node.
 </check-box>
 ```
 
-The `label` attribute is ignored in this case, and the inner input's
-own attributes are left alone.
+The `label` attribute is ignored in this case. The attributes that are
+copied to the input (see [Attributes](#attributes)) still are, and
+`controlAttributes` is applied. Otherwise the inner input's own
+attributes are left alone.
 
 ### Attributes
 

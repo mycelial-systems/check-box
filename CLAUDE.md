@@ -61,8 +61,8 @@ attributes: `null`/`undefined` remove; for `aria-*` booleans become
   anything set while disconnected. `controlAttributes` is re-applied
   after a move, so it wins over host attributes.
 - Hydrated markup (the app rendered the input): host attributes are
-  never moved or restored; the app sets them on the input. Only
-  `controlAttributes` is applied.
+  never moved or restored; the app sets them on the input. Mirrored
+  attributes are still copied, and `controlAttributes` is applied.
 - Moving an attribute only works one way. Removing a moved attribute
   from the host does nothing to the input, which is why
   `controlAttributes` exists.

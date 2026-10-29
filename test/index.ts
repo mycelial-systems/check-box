@@ -715,7 +715,8 @@ test('host changes that move nothing do not re-apply controlAttributes',
         el.controlAttributes = { 'aria-label': 'prop' }
         el.control!.setAttribute('aria-label', 'app')
 
-        // `name` is observed, but moving it does not move anything
+        // `name` triggers the observer, but it is not a moved attribute,
+        // so nothing moves
         el.setAttribute('name', 'n')
         await mutations()
         t.equal(el.control!.getAttribute('aria-label'), 'app',
