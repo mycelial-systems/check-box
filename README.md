@@ -94,8 +94,10 @@ owns every node.
 </check-box>
 ```
 
-The `label` attribute is ignored in this case, and the inner input's
-own attributes are left alone.
+The `label` attribute is ignored in this case. The attributes that are
+copied to the input (see [Attributes](#attributes)) still are, and
+`controlAttributes` is applied. Otherwise the inner input's own
+attributes are left alone.
 
 ### Attributes
 
@@ -137,9 +139,11 @@ checkbox.
 <p id="metric-hint">Adds the metric to the chart.</p>
 ```
 
-Because they are moved, changing one of these on the host after the
-element renders does nothing. Change it on the inner input instead,
-with the `control` property. When you
+These move to the inner `<input>` whenever they are set on the host,
+including after the element renders. Removing one from the host
+afterwards does nothing, because it is no longer on the host. Change or
+remove it on the inner input instead, with the `control` property, or
+set the full set with the `controlAttributes` property. When you
 [render the markup yourself](#render-the-markup-yourself), nothing is
 moved: put these attributes on your `<input>` directly.
 
@@ -173,7 +177,37 @@ checkbox.control?.setAttribute('aria-invalid', 'true')
 // Get/set the id of the inner input
 console.log(checkbox.inputId)  // ""
 checkbox.inputId = "my-checkbox"
+
+// Set aria-*, tabindex, and autofocus on the inner input
+checkbox.controlAttributes = {
+    'aria-invalid': true,
+    tabindex: 0
+}
 ```
+
+`controlAttributes` is the full set for the inner input. A name left out
+of the object is removed from the input, and `null` or `''` removes
+everything it set. Values follow the usual attribute rules: `null` or
+`undefined` removes the attribute, `true` sets it as an empty attribute
+(or `"true"` for `aria-*`), `false` removes it (or sets `"false"` for
+`aria-*`), and any other value is written as a string. Names other than
+`aria-*`, `tabindex`, and `autofocus` are ignored. Use `inputId` for the
+`id`. Keys are attribute names, so write `tabindex`, not `tabIndex`. A
+camel-case key is ignored. A value in `controlAttributes` wins over a host
+attribute with the same name, and leaving that name out later removes it
+from the input, even if the host had supplied it before. `autofocus` only
+takes effect if it is set before the element renders.
+
+In a framework, pass the object as a prop. This Preact example marks the
+checkbox invalid when `bad` is true:
+
+```js
+html`<check-box controlAttributes=${{ 'aria-invalid': bad }}>`
+```
+
+Import `@substrate-system/check-box` before the framework renders, or
+before any code sets the property. Before the element is defined, Preact
+writes the prop as a plain attribute instead of setting the property.
 
 
 ### Events
