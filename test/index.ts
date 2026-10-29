@@ -594,6 +594,201 @@ test('hydrated input does not receive attributes set after render', async t => {
         'app input does not get aria-invalid')
 })
 
+test('controlAttributes sets listed names on the inner input', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.controlAttributes = {
+        'aria-describedby': 'hint',
+        tabindex: 0
+    }
+
+    t.equal(el.control!.getAttribute('aria-describedby'), 'hint',
+        'input gets aria-describedby')
+    t.equal(el.control!.getAttribute('tabindex'), '0',
+        'input gets tabindex')
+    t.ok(!el.hasAttribute('aria-describedby'),
+        'host has no aria-describedby')
+})
+
+test('controlAttributes removes names that are left out or null', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.controlAttributes = {
+        'aria-invalid': 'true',
+        'aria-label': 'x',
+        'aria-describedby': 'hint',
+        'aria-required': 'true'
+    }
+    t.equal(el.control!.getAttribute('aria-invalid'), 'true',
+        'aria-invalid is set')
+    t.equal(el.control!.getAttribute('aria-label'), 'x',
+        'aria-label is set')
+    t.equal(el.control!.getAttribute('aria-describedby'), 'hint',
+        'aria-describedby is set')
+    t.equal(el.control!.getAttribute('aria-required'), 'true',
+        'aria-required is set')
+
+    el.controlAttributes = {
+        'aria-label': 'x',
+        'aria-describedby': null,
+        'aria-required': undefined
+    }
+    t.ok(!el.control!.hasAttribute('aria-invalid'),
+        'aria-invalid is removed when left out')
+    t.ok(!el.control!.hasAttribute('aria-describedby'),
+        'aria-describedby is removed when null')
+    t.ok(!el.control!.hasAttribute('aria-required'),
+        'aria-required is removed when undefined')
+    t.equal(el.control!.getAttribute('aria-label'), 'x',
+        'aria-label is kept')
+})
+
+test('controlAttributes null or empty string removes everything it set',
+    async t => {
+        document.body.innerHTML = '<check-box label="Agree"></check-box>'
+        const el = await waitFor('check-box') as CheckBox
+
+        el.controlAttributes = { 'aria-label': 'x' }
+        t.equal(el.control!.getAttribute('aria-label'), 'x',
+            'aria-label is set')
+
+        el.controlAttributes = null
+        t.ok(!el.control!.hasAttribute('aria-label'),
+            'null removes aria-label')
+
+        el.controlAttributes = { 'aria-label': 'x' }
+        t.equal(el.control!.getAttribute('aria-label'), 'x',
+            'aria-label is set again')
+
+        // Preact assigns '' when the prop is removed
+        Reflect.set(el, 'controlAttributes', '')
+        t.ok(!el.control!.hasAttribute('aria-label'),
+            'empty string removes aria-label')
+    })
+
+test('controlAttributes getter returns a copy', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.controlAttributes = { 'aria-label': 'x' }
+    const copy = el.controlAttributes
+    copy['aria-label'] = 'y'
+    t.equal(el.control!.getAttribute('aria-label'), 'x',
+        'changing the copy does not change the input')
+
+    el.controlAttributes = copy
+    t.equal(el.control!.getAttribute('aria-label'), 'y',
+        'assigning the copy back changes the input')
+})
+
+test('controlAttributes set before render applies on render', async t => {
+    const el = document.createElement('check-box') as CheckBox
+    el.setAttribute('label', 'Agree')
+    el.controlAttributes = { 'aria-required': true }
+
+    document.body.replaceChildren(el)
+    await waitFor('check-box')
+
+    t.equal(el.control!.getAttribute('aria-required'), 'true',
+        'input gets aria-required from the value set before render')
+})
+
+test('controlAttributes applies to a hydrated input', async t => {
+    const el = document.createElement('check-box') as CheckBox
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    el.append(input)
+    el.controlAttributes = { 'aria-invalid': 'true' }
+
+    document.body.replaceChildren(el)
+    await waitFor('check-box')
+
+    t.equal(input.getAttribute('aria-invalid'), 'true',
+        'app input gets aria-invalid')
+    t.ok(!el.hasAttribute('aria-invalid'), 'host has no aria-invalid')
+})
+
+test('controlAttributes writes values the way Preact does', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.controlAttributes = { 'aria-invalid': false, autofocus: true }
+    t.equal(el.control!.getAttribute('aria-invalid'), 'false',
+        'aria-* false is the string "false"')
+    t.equal(el.control!.getAttribute('autofocus'), '',
+        'autofocus true is an empty attribute')
+
+    el.controlAttributes = { autofocus: false }
+    t.ok(!el.control!.hasAttribute('autofocus'),
+        'autofocus false removes the attribute')
+})
+
+test('controlAttributes ignores names other than aria-*, tabindex, ' +
+    'and autofocus', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.controlAttributes = { name: 'x', id: 'y' }
+    t.ok(el.control!.getAttribute('name') !== 'x', 'name is not written')
+    t.ok(el.control!.id !== 'y', 'id is not written')
+})
+
+test('controlAttributes survives a label change', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.controlAttributes = { 'aria-label': 'prop' }
+    el.setAttribute('label', 'Two')
+
+    t.equal(el.control!.getAttribute('aria-label'), 'prop',
+        'input keeps aria-label after the label changes')
+})
+
+test('controlAttributes wins over a host attribute at render', async t => {
+    const el = document.createElement('check-box') as CheckBox
+    el.setAttribute('label', 'One')
+    el.setAttribute('aria-label', 'host')
+    el.controlAttributes = { 'aria-label': 'prop' }
+
+    document.body.replaceChildren(el)
+    await waitFor('check-box')
+
+    t.equal(el.control!.getAttribute('aria-label'), 'prop',
+        'input has the property value')
+})
+
+test('controlAttributes wins over a host attribute set after render',
+    async t => {
+        document.body.innerHTML = '<check-box label="Agree"></check-box>'
+        const el = await waitFor('check-box') as CheckBox
+
+        el.controlAttributes = { 'aria-label': 'prop' }
+        el.setAttribute('aria-label', 'host')
+        await mutations()
+
+        t.equal(el.control!.getAttribute('aria-label'), 'prop',
+            'input has the property value')
+        t.ok(!el.hasAttribute('aria-label'), 'host has no aria-label')
+    })
+
+test('controlAttributes wins over a host attribute set while disconnected',
+    async t => {
+        document.body.innerHTML = '<check-box label="Agree"></check-box>'
+        const el = await waitFor('check-box') as CheckBox
+
+        el.controlAttributes = { 'aria-label': 'prop' }
+        el.remove()
+        el.setAttribute('aria-label', 'host')
+        document.body.append(el)
+        await mutations()
+
+        t.equal(el.control!.getAttribute('aria-label'), 'prop',
+            'input has the property value after reconnect')
+        t.ok(!el.hasAttribute('aria-label'), 'host has no aria-label')
+    })
+
 test('all done', () => {
     // @ts-expect-error tests
     window.testsFinished = true

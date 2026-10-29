@@ -23,6 +23,43 @@ const MIRRORED = ['checked', 'disabled', 'name', 'value', 'required', 'form']
  */
 const MOVED = ['id', 'tabindex', 'autofocus']
 
+/**
+ * Attributes for the inner input, as a framework passes them. See
+ * `CheckBox.controlAttributes`.
+ */
+export type ControlAttributes = Record<
+    string,
+    string|number|boolean|null|undefined
+>
+
+/**
+ * The names `controlAttributes` accepts. `id` goes through `inputId`.
+ */
+function isControlName (name:string):boolean {
+    return (
+        name === 'tabindex' ||
+        name === 'autofocus' ||
+        name.startsWith('aria-')
+    )
+}
+
+/**
+ * The attribute value for one `controlAttributes` entry, written the way
+ * Preact writes attributes, or `null` to remove the attribute.
+ */
+function attributeValue (
+    name:string,
+    value:ControlAttributes[string]
+):string|null {
+    if (value === null || value === undefined) return null
+    if (typeof value === 'boolean') {
+        // aria-* has no boolean form, so false is the string "false"
+        if (name.startsWith('aria-')) return String(value)
+        return value ? '' : null
+    }
+    return String(value)
+}
+
 export class CheckBox extends HTMLElement {
     static TAG:string = 'check-box'
 
@@ -31,8 +68,16 @@ export class CheckBox extends HTMLElement {
     // true if this element created the inner markup, false if it hydrated
     // markup that was already there
     private _ownsMarkup = false
-    // Moves control attributes that are set on the host after render
-    private _observer = new MutationObserver(() => this._moveFromHost())
+    // Moves control attributes that are set on the host after render.
+    // `controlAttributes` is applied again after a move, so it wins.
+    private _observer = new MutationObserver(() => {
+        if (this._moveFromHost()) this._applyControlAttributes()
+    })
+
+    private _controlAttributes:ControlAttributes = {}
+    // The names `_applyControlAttributes` wrote last time, so it can
+    // remove the ones that are no longer listed
+    private _appliedNames:string[] = []
 
     get checked ():boolean {
         return this._input?.checked ?? false
@@ -90,7 +135,8 @@ export class CheckBox extends HTMLElement {
 
     /**
      * The inner input. Use it to change a moved attribute, like `aria-*` or
-     * `tabindex`, after connect.
+     * `tabindex`, after connect. To set and clear `aria-*`, `tabindex`, and
+     * `autofocus` from a framework, use `controlAttributes`.
      */
     get control ():HTMLInputElement|null {
         return this._input
@@ -112,13 +158,30 @@ export class CheckBox extends HTMLElement {
         }
     }
 
+    /**
+     * `aria-*`, `tabindex`, and `autofocus` for the inner input. Set the
+     * full set each time: a name left out is removed from the input.
+     * `null` or `''` removes everything this set.
+     */
+    get controlAttributes ():ControlAttributes {
+        return { ...this._controlAttributes }
+    }
+
+    set controlAttributes (value:ControlAttributes|null) {
+        // Preact assigns '' when the prop is removed
+        this._controlAttributes = (value && typeof value === 'object') ?
+            { ...value } :
+            {}
+        this._applyControlAttributes()
+    }
+
     async connectedCallback () {
         this.render()
         this._input?.addEventListener('change', this._syncChecked)
         if (this._ownsMarkup) {
             // A reconnect goes through the hydrate branch of render(), so
             // move anything set on the host while it was disconnected
-            this._moveFromHost()
+            if (this._moveFromHost()) this._applyControlAttributes()
             this._observer.observe(this, { attributes: true })
         }
     }
@@ -225,6 +288,9 @@ export class CheckBox extends HTMLElement {
         if (existing) {
             this._input = existing
             this._forwardMirrored()
+            // The app set `aria-*` on its own input, except that
+            // `controlAttributes` is an explicit set from the app too
+            this._applyControlAttributes()
             return
         }
 
@@ -237,6 +303,7 @@ export class CheckBox extends HTMLElement {
         // Before the input is in the DOM, so `autofocus` takes effect
         this._forwardMirrored()
         this._moveFromHost()
+        this._applyControlAttributes()
 
         this._renderLabel(labelText)
     }
@@ -251,21 +318,51 @@ export class CheckBox extends HTMLElement {
 
     /**
      * Move `id`, `tabindex`, `autofocus`, and every `aria-*` attribute
-     * from the host to the inner input.
+     * from the host to the inner input. Returns true if it moved any.
      */
-    private _moveFromHost ():void {
+    private _moveFromHost ():boolean {
         const input = this._input
-        if (!input) return
+        if (!input) return false
 
+        let moved = false
         for (const { name, value } of Array.from(this.attributes)) {
             if (name === 'id') {
                 this.inputId = value
                 this.removeAttribute(name)
+                moved = true
             } else if (MOVED.includes(name) || name.startsWith('aria-')) {
                 input.setAttribute(name, value)
                 this.removeAttribute(name)
+                moved = true
             }
         }
+        return moved
+    }
+
+    /**
+     * Write `controlAttributes` to the inner input, and remove any name
+     * it set last time that it no longer lists.
+     */
+    private _applyControlAttributes ():void {
+        const input = this._input
+        if (!input) return
+
+        const attrs = this._controlAttributes
+        const names = Object.keys(attrs).filter(isControlName)
+        for (const name of this._appliedNames) {
+            if (!names.includes(name)) input.removeAttribute(name)
+        }
+
+        for (const name of names) {
+            const value = attributeValue(name, attrs[name])
+            if (value === null) {
+                input.removeAttribute(name)
+            } else {
+                input.setAttribute(name, value)
+            }
+        }
+
+        this._appliedNames = names
     }
 }
 
