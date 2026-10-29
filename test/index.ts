@@ -677,11 +677,50 @@ test('controlAttributes getter returns a copy', async t => {
     copy['aria-label'] = 'y'
     t.equal(el.control!.getAttribute('aria-label'), 'x',
         'changing the copy does not change the input')
+    t.equal(el.controlAttributes['aria-label'], 'x',
+        'the stored value is unchanged')
+
+    // A later re-apply must not write the unassigned change
+    el.setAttribute('aria-describedby', 'z')
+    await mutations()
+    t.equal(el.control!.getAttribute('aria-label'), 'x',
+        're-apply after a move does not write the copy')
 
     el.controlAttributes = copy
     t.equal(el.control!.getAttribute('aria-label'), 'y',
         'assigning the copy back changes the input')
 })
+
+test('controlAttributes setter copies its argument', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    const o = { 'aria-label': 'x' }
+    el.controlAttributes = o
+    o['aria-label'] = 'z'
+    t.equal(el.controlAttributes['aria-label'], 'x',
+        'changing the argument does not change the stored value')
+
+    el.setAttribute('aria-describedby', 'd')
+    await mutations()
+    t.equal(el.control!.getAttribute('aria-label'), 'x',
+        're-apply does not write the changed argument')
+})
+
+test('host changes that move nothing do not re-apply controlAttributes',
+    async t => {
+        document.body.innerHTML = '<check-box label="Agree"></check-box>'
+        const el = await waitFor('check-box') as CheckBox
+
+        el.controlAttributes = { 'aria-label': 'prop' }
+        el.control!.setAttribute('aria-label', 'app')
+
+        // `name` is observed, but moving it does not move anything
+        el.setAttribute('name', 'n')
+        await mutations()
+        t.equal(el.control!.getAttribute('aria-label'), 'app',
+            'the app value is kept after a host change that moves nothing')
+    })
 
 test('controlAttributes set before render applies on render', async t => {
     const el = document.createElement('check-box') as CheckBox

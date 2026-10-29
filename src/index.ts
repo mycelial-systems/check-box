@@ -284,12 +284,11 @@ export class CheckBox extends HTMLElement {
 
         // When hydrating, leave the input's own attributes alone. The
         // framework that rendered it should set `aria-*`, `id`, and the rest
-        // on the input directly.
+        // on the input directly. The exception is `controlAttributes`, which
+        // the app set explicitly, so it is applied here too.
         if (existing) {
             this._input = existing
             this._forwardMirrored()
-            // The app set `aria-*` on its own input, except that
-            // `controlAttributes` is an explicit set from the app too
             this._applyControlAttributes()
             return
         }
