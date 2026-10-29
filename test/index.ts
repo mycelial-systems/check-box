@@ -517,6 +517,83 @@ test('removing value from the host removes it from the input', async t => {
     t.ok(!input.hasAttribute('value'), 'inner value attribute is removed')
 })
 
+/** Let pending MutationObserver callbacks run */
+function mutations ():Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, 0))
+}
+
+test('aria-* and tabindex set after render move to the input', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.setAttribute('aria-invalid', 'true')
+    el.setAttribute('tabindex', '-1')
+    await mutations()
+
+    t.equal(el.control!.getAttribute('aria-invalid'), 'true',
+        'input gets aria-invalid')
+    t.equal(el.control!.getAttribute('tabindex'), '-1',
+        'input gets tabindex')
+    t.ok(!el.hasAttribute('aria-invalid'),
+        'host no longer has aria-invalid')
+    t.ok(!el.hasAttribute('tabindex'), 'host no longer has tabindex')
+})
+
+test('id set after render becomes the inner input id', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.id = 'late'
+    await mutations()
+
+    t.equal(el.control!.id, 'late', 'inner input has the id')
+    t.equal(el.id, '', 'host has no id')
+})
+
+test('attributes move after the element is removed and appended', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.remove()
+    document.body.append(el)
+    el.setAttribute('aria-describedby', 'hint')
+    await mutations()
+
+    t.equal(el.control!.getAttribute('aria-describedby'), 'hint',
+        'input gets aria-describedby after reconnect')
+    t.ok(!el.hasAttribute('aria-describedby'),
+        'host no longer has aria-describedby')
+})
+
+test('attributes set while disconnected move on reconnect', async t => {
+    document.body.innerHTML = '<check-box label="Agree"></check-box>'
+    const el = await waitFor('check-box') as CheckBox
+
+    el.remove()
+    el.setAttribute('aria-label', 'later')
+    document.body.append(el)
+    await mutations()
+
+    t.equal(el.control!.getAttribute('aria-label'), 'later',
+        'input gets aria-label')
+    t.ok(!el.hasAttribute('aria-label'), 'host no longer has aria-label')
+})
+
+test('hydrated input does not receive attributes set after render', async t => {
+    const el = document.createElement('check-box') as CheckBox
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    el.append(input)
+    document.body.replaceChildren(el)
+    await waitFor('check-box')
+
+    el.setAttribute('aria-invalid', 'true')
+    await mutations()
+
+    t.ok(!input.hasAttribute('aria-invalid'),
+        'app input does not get aria-invalid')
+})
+
 test('all done', () => {
     // @ts-expect-error tests
     window.testsFinished = true

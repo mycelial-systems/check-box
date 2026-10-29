@@ -137,10 +137,11 @@ checkbox.
 <p id="metric-hint">Adds the metric to the chart.</p>
 ```
 
-Because they are moved, changing one of these on the host after the
-element renders does nothing. Change it on the inner input instead,
-with the `control` property. When you
-[render the markup yourself](#render-the-markup-yourself), nothing is
+These move to the inner `<input>` whenever they are set on the host,
+including after the element renders. Removing one from the host
+afterwards does nothing, because it is no longer on the host. Change or
+remove it on the inner input instead, with the `control` property. When
+you [render the markup yourself](#render-the-markup-yourself), nothing is
 moved: put these attributes on your `<input>` directly.
 
 

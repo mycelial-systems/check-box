@@ -16,9 +16,10 @@ const MIRRORED = ['checked', 'disabled', 'name', 'value', 'required', 'form']
 
 /**
  * Host attributes that describe the focusable control, so they are moved to
- * the inner input when this element renders it. `aria-*` attributes are
- * moved too. Left on the host, these would make a second tab stop, or fail
- * axe's `aria-prohibited-attr`, because the host has no role.
+ * the inner input when this element renders it, and again whenever one is
+ * set on the host afterwards, unless the app rendered the input. `aria-*`
+ * attributes are moved too. Left on the host, these would make a second tab
+ * stop, or fail axe's `aria-prohibited-attr`, because the host has no role.
  */
 const MOVED = ['id', 'tabindex', 'autofocus']
 
@@ -30,6 +31,8 @@ export class CheckBox extends HTMLElement {
     // true if this element created the inner markup, false if it hydrated
     // markup that was already there
     private _ownsMarkup = false
+    // Moves control attributes that are set on the host after render
+    private _observer = new MutationObserver(() => this._moveFromHost())
 
     get checked ():boolean {
         return this._input?.checked ?? false
@@ -112,10 +115,17 @@ export class CheckBox extends HTMLElement {
     async connectedCallback () {
         this.render()
         this._input?.addEventListener('change', this._syncChecked)
+        if (this._ownsMarkup) {
+            // A reconnect goes through the hydrate branch of render(), so
+            // move anything set on the host while it was disconnected
+            this._moveFromHost()
+            this._observer.observe(this, { attributes: true })
+        }
     }
 
     disconnectedCallback () {
         this._input?.removeEventListener('change', this._syncChecked)
+        this._observer.disconnect()
     }
 
     // Keep host `checked` attribute in sync with user-driven input toggles
@@ -226,12 +236,7 @@ export class CheckBox extends HTMLElement {
 
         // Before the input is in the DOM, so `autofocus` takes effect
         this._forwardMirrored()
-        for (const { name, value } of Array.from(this.attributes)) {
-            if (MOVED.includes(name) || name.startsWith('aria-')) {
-                input.setAttribute(name, value)
-                this.removeAttribute(name)
-            }
-        }
+        this._moveFromHost()
 
         this._renderLabel(labelText)
     }
@@ -240,6 +245,25 @@ export class CheckBox extends HTMLElement {
         for (const name of MIRRORED) {
             if (this.hasAttribute(name)) {
                 this._forward(name, this.getAttribute(name))
+            }
+        }
+    }
+
+    /**
+     * Move `id`, `tabindex`, `autofocus`, and every `aria-*` attribute
+     * from the host to the inner input.
+     */
+    private _moveFromHost ():void {
+        const input = this._input
+        if (!input) return
+
+        for (const { name, value } of Array.from(this.attributes)) {
+            if (name === 'id') {
+                this.inputId = value
+                this.removeAttribute(name)
+            } else if (MOVED.includes(name) || name.startsWith('aria-')) {
+                input.setAttribute(name, value)
+                this.removeAttribute(name)
             }
         }
     }
